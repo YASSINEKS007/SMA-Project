@@ -47,17 +47,14 @@ public class SellerAgent1 extends GuiAgent {
                             ACLMessage aclMessage1 = aclMessage.createReply();
                             aclMessage1.setPerformative(ACLMessage.AGREE);
                             aclMessage1.setContent(choosenPrice);
-
                             send(aclMessage1);
-
                     }
-                    } else {
+                } else {
                     block();
                 }
             }
 
         });
-
 
 
         parallelBehaviour.addSubBehaviour(new OneShotBehaviour() {

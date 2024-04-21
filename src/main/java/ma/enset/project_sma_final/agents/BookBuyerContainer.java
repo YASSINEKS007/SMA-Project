@@ -66,8 +66,21 @@ public class BookBuyerContainer extends Application {
 
     public void logMessages(ACLMessage aclMessage){
         Platform.runLater(() -> {
-            observableListData.add(aclMessage.getSender().getLocalName() + ": " + aclMessage.getContent());
+            observableListData.add(aclMessage.getSender().getLocalName() + " => " + aclMessage.getContent());
         });
     }
+
+    public void logMessagesPrice(String msg, ACLMessage aclMessage){
+        Platform.runLater(() -> {
+            observableListData.add(aclMessage.getSender().getLocalName() + " => " + msg + aclMessage.getContent());
+        });
+    }
+
+    public void logMessagesString(String msg, ACLMessage aclMessage){
+        Platform.runLater(() -> {
+            observableListData.add(aclMessage.getSender().getLocalName() + " " + msg + aclMessage.getContent());
+        });
+    }
+
 
 }

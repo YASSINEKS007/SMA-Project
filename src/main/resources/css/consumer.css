@@ -1,0 +1,25 @@
+.root {
+    -fx-font-family: "Arial";
+}
+
+.button {
+    -fx-font-size: 14px;
+}
+
+.ok-button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+}
+
+.ok-button:hover {
+    -fx-background-color: #45a049;
+}
+
+.list-cell {
+    -fx-background-color: white;
+}
+
+.list-view {
+    -fx-background-color: white;
+    -fx-border-color: #ddd;
+}

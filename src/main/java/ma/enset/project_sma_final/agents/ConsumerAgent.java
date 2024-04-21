@@ -46,10 +46,9 @@ public class ConsumerAgent extends GuiAgent {
         if (evt.getType() == 1){
             String bookName = (String) evt.getParameter(0);
             ACLMessage aclMessage = new ACLMessage(ACLMessage.REQUEST);
-            aclMessage.setContent(bookName);
+            aclMessage.setContent("I request the book : " + bookName);
             aclMessage.addReceiver(new AID("BookBuyerAgent", AID.ISLOCALNAME));
             send(aclMessage);
-
         }
     }
 }

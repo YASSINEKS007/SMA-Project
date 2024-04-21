@@ -21,6 +21,8 @@ public class BookBuyerAgent extends GuiAgent {
     protected BookBuyerContainer bookBuyerContainer;
 
     protected AID[] sellers;
+    private int counter = 0;
+    private List<ACLMessage> replies = new ArrayList<>();
 
     @Override
     protected void setup() {
@@ -32,8 +34,6 @@ public class BookBuyerAgent extends GuiAgent {
         addBehaviour(parallelBehaviour);
 
         parallelBehaviour.addSubBehaviour(new CyclicBehaviour() {
-            private int counter;
-            private List<ACLMessage> replies = new ArrayList<ACLMessage>();
             @Override
             public void action() {
                 MessageTemplate messageTemplate = MessageTemplate.or(
@@ -53,6 +53,7 @@ public class BookBuyerAgent extends GuiAgent {
 
                     switch (aclMessage.getPerformative()) {
                         case ACLMessage.REQUEST:
+                            bookBuyerContainer.logMessages(aclMessage);
                             String book = aclMessage.getContent();
                             ACLMessage aclMessage1 = new ACLMessage(ACLMessage.CFP);
                             aclMessage1.setContent(book);
@@ -62,57 +63,61 @@ public class BookBuyerAgent extends GuiAgent {
                             send(aclMessage1);
                             break;
 
-
                         case ACLMessage.PROPOSE:
                             ++counter;
                             replies.add(aclMessage);
-                            if(counter == sellers.length) {
-                                ACLMessage bestOffre = replies.get(0);
-                                double mini = Double.parseDouble(replies.get(0).getContent());
-                                for(ACLMessage offre: replies){
-                                    double price = Double.parseDouble(offre.getContent());
-                                    System.out.println(bestOffre.getSender() + " proposes the price :  " + price);
-                                    if(price < mini) {
-                                        bestOffre = offre;
-                                        mini = price;
+                            if (counter == sellers.length) {
+                                ACLMessage bestOffer = replies.get(0);
+                                double minPrice = Double.parseDouble(replies.get(0).getContent());
+                                for (ACLMessage offer : replies) {
+                                    double price = Double.parseDouble(offer.getContent());
+                                    System.out.println(offer.getSender() + " proposes the price :  " + price);
+                                    if (price < minPrice) {
+                                        bestOffer = offer;
+                                        minPrice = price;
                                     }
                                 }
 
-                                System.out.println(bestOffre.getSender() + " proposes the best price :  " + mini);
 
-                                ACLMessage aclMessageAccept = bestOffre.createReply();
-                                aclMessageAccept.setContent("Accepted");
-                                aclMessageAccept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-                                send(aclMessageAccept);
+                                for (ACLMessage offer : replies) {
+                                    bookBuyerContainer.logMessagesPrice(" I offre the price " , offer);
+                                    ACLMessage aclMessageRefuse = offer.createReply();
+                                    aclMessageRefuse.setContent("Proposal Refused");
+                                    aclMessageRefuse.setPerformative(ACLMessage.REFUSE);
+                                    if (Double.parseDouble(offer.getContent()) > minPrice) {
+                                        send(aclMessageRefuse);
+                                    } else {
+                                        ACLMessage aclMessageAccept = offer.createReply();
+                                        aclMessageAccept.setContent("Proposal Accepted");
+                                        aclMessageAccept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                                        send(aclMessageAccept);
+                                    }
 
+                                }
+                                bookBuyerContainer.logMessagesString( " proposes the best price :  "+ bestOffer.getContent(), bestOffer);
+                                counter = 0;
+                                replies.clear();
                             }
-
                             break;
+
                         case ACLMessage.AGREE:
-                            ACLMessage aclMessage2 = new ACLMessage(ACLMessage.CONFIRM);
+                            ACLMessage aclMessage2 = aclMessage.createReply();
+                            aclMessage2.setPerformative(ACLMessage.CONFIRM);
                             aclMessage2.addReceiver(new AID("consumer", AID.ISLOCALNAME));
                             aclMessage2.setContent(aclMessage.getContent());
-                            System.out.println("Agree message : " + aclMessage.getContent());
                             send(aclMessage2);
-
                             break;
+
                         case ACLMessage.REFUSE:
                             break;
-
                     }
-                    String bookPrice = aclMessage.getContent();
-                    bookBuyerContainer.logMessages(aclMessage);
-                    ACLMessage aclMessageReply = aclMessage.createReply();
-                    aclMessageReply.setPerformative(ACLMessage.INFORM);
-                    aclMessageReply.setContent("Offre Received for the price " + bookPrice);
-                    aclMessageReply.setSender(bookBuyerContainer.bookBuyerAgent.getAID());
-                    send(aclMessageReply);
-
 
                 } else {
                     block();
                 }
             }
+
+
         });
 
         parallelBehaviour.addSubBehaviour(new TickerBehaviour(this, 5000) {
@@ -134,11 +139,16 @@ public class BookBuyerAgent extends GuiAgent {
                 }
             }
         });
-
     }
 
     @Override
-    protected void onGuiEvent(GuiEvent guiEvent) {
-
+    protected void onGuiEvent(GuiEvent evt) {
+        if (evt.getType() == 1) {
+            String msgBookName = (String) evt.getParameter(0);
+            ACLMessage aclMessage = new ACLMessage(ACLMessage.REQUEST);
+            aclMessage.setContent(msgBookName);
+            aclMessage.addReceiver(new AID("BookBuyerAgent", AID.ISLOCALNAME));
+            send(aclMessage);
+        }
     }
 }

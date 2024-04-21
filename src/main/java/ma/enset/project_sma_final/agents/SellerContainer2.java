@@ -71,7 +71,7 @@ public class SellerContainer2 extends Application {
 
     public void logMessages(ACLMessage aclMessage) {
         Platform.runLater(() -> {
-            observableListData.add(aclMessage.getSender().getLocalName() + " : " + aclMessage.getContent());
+            observableListData.add(aclMessage.getSender().getLocalName() + " => " + aclMessage.getContent());
         });
     }
 
